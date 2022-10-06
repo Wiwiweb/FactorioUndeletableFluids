@@ -50,8 +50,9 @@ local function prevent_flushing(event)
 
   local player = game.get_player(event.player_index)
   if player then
+    local message = settings.global["undeletable_fluids_nope"].value and {"undeletable-fluids.nope"} or {"undeletable-fluids.prevented"}
     player.create_local_flying_text({
-      text = {"undeletable-fluids.nope"},
+      text = message,
       create_at_cursor = true
     })
     player.play_sound({path="utility/cannot_build"})
