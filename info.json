@@ -1,0 +1,12 @@
+{
+    "name": "undeletable-fluids",
+    "version": "1.0.0",
+    "title": "Undeletable fluids",
+    "author": "Wiwiweb",
+    "factorio_version": "1.1",
+    "dependencies": ["base >= 1.1"],
+    "description": "WIP",
+    "package": {
+      "git_publish_branch": "main"
+    }
+}
