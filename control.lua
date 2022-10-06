@@ -60,6 +60,15 @@ local function prevent_flushing(event)
 
 end
 
+local function explosion(event)
+  event.entity.surface.create_entity({
+    name = "explosive-rocket",
+    position = event.entity.position,
+    target = event.entity.position,
+    speed = 1,
+  })
+end
+
 local function atomic_explosion(event)
   event.entity.surface.create_entity({
     name = "atomic-rocket",
@@ -70,6 +79,13 @@ local function atomic_explosion(event)
 end
 
 local function on_player_flushed_fluid(event)
-  prevent_flushing(event)
+  local action = settings.global["undeletable_fluids_flush_action"].value
+  if action == "prevent" then
+    prevent_flushing(event)
+  elseif action == "explosion" then
+    explosion(event)
+  elseif action == "atomic_explosion" then
+    atomic_explosion(event)
+  end
 end
 script.on_event(defines.events.on_player_flushed_fluid, on_player_flushed_fluid)
