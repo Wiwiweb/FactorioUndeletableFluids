@@ -5,7 +5,7 @@
     "author": "Wiwiweb",
     "factorio_version": "1.1",
     "dependencies": ["base >= 1.1"],
-    "description": "WIP",
+    "description": "Prevents the flushing of fluids in pipes and tanks. Use this to prevent cheesing the disposal of byproducts.",
     "package": {
       "git_publish_branch": "main"
     }
