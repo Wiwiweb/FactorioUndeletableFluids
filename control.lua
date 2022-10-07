@@ -1,5 +1,22 @@
 require("__core__/lualib/util.lua")
 
+local function create_error_message(player_index, default_message, position)
+  local player = game.get_player(player_index)
+  if player then
+    local message = settings.global["undeletable_fluids_nope"].value and {"undeletable-fluids.nope"} or default_message
+    local flying_text_params = {
+      text = message
+    }
+    if position then
+      flying_text_params.position = position
+    else
+      flying_text_params.create_at_cursor = true
+    end
+    player.create_local_flying_text(flying_text_params)
+    player.play_sound({path="utility/cannot_build"})
+  end
+end
+
 local function prevent_flushing(event)
   if event.only_this_entity then
     event.entity.insert_fluid(
@@ -50,15 +67,7 @@ local function prevent_flushing(event)
 
   end
 
-  local player = game.get_player(event.player_index)
-  if player then
-    local message = settings.global["undeletable_fluids_nope"].value and {"undeletable-fluids.nope"} or {"undeletable-fluids.prevented"}
-    player.create_local_flying_text({
-      text = message,
-      create_at_cursor = true
-    })
-    player.play_sound({path="utility/cannot_build"})
-  end
+  create_error_message(event.player_index, {"undeletable-fluids.flush_prevented"})
 
 end
 
@@ -148,6 +157,9 @@ local function prevent_removal(event)
 
   -- Balance out surrounding fluidboxes (Factorio just pushed fluids from this entity to surrounding fluidboxes)
   balance_surrounding_fluidboxes(new_entity.fluidbox)
+
+  create_error_message(event.player_index, {"undeletable-fluids.mining_prevented"}, new_entity_params.position)
+
 end
 
 local function on_player_removed_entity(event)
