@@ -1,3 +1,5 @@
+require("__core__/lualib/util.lua")
+
 local function prevent_flushing(event)
   if event.only_this_entity then
     event.entity.insert_fluid(
@@ -34,9 +36,9 @@ local function prevent_flushing(event)
     end
 
     local percent_to_fill = event.amount / total_fluid_system_capacity
-    game.print("nb fluidboxes: " .. table_size(fluidboxes_list))
-    game.print("total_fluid_system_capacity: " .. total_fluid_system_capacity)
-    game.print("nb percent_to_fill: " .. percent_to_fill)
+    -- log("nb fluidboxes: " .. table_size(fluidboxes_list))
+    -- log("total_fluid_system_capacity: " .. total_fluid_system_capacity)
+    -- log("nb percent_to_fill: " .. percent_to_fill)
 
     for _, fluidboxes in pairs(fluidboxes_list) do
       for j = 1, #fluidboxes do
@@ -89,3 +91,86 @@ local function on_player_flushed_fluid(event)
   end
 end
 script.on_event(defines.events.on_player_flushed_fluid, on_player_flushed_fluid)
+
+local function balance_surrounding_fluidboxes(starting_fluidboxes)
+  for i = 1, #starting_fluidboxes do
+    local surrounding_fluidboxes_list = {
+      {fluidboxes = starting_fluidboxes, index = i}
+    }
+    local surrounding_fluidboxes_total_amount = starting_fluidboxes[i].amount
+    local surrounding_fluidboxes_total_capacity = starting_fluidboxes.get_capacity(i)
+    local fluid_name = starting_fluidboxes[i].name
+    local this_fluid_system_id = starting_fluidboxes.get_fluid_system_id(i)
+    for _, connected_fluidboxes in pairs(starting_fluidboxes.get_connections(i)) do
+      -- Only need to check all direct connections, not recursively,
+      -- because the Factorio engine only transfers to those.
+      for j = 1, #connected_fluidboxes do
+        if connected_fluidboxes.get_fluid_system_id(j) == this_fluid_system_id and connected_fluidboxes[j].name == fluid_name then
+          table.insert(surrounding_fluidboxes_list, {fluidboxes = connected_fluidboxes, index = j})
+          surrounding_fluidboxes_total_amount = surrounding_fluidboxes_total_amount + connected_fluidboxes[j].amount
+          surrounding_fluidboxes_total_capacity = surrounding_fluidboxes_total_capacity + connected_fluidboxes.get_capacity(j)
+        end
+      end
+    end
+
+    -- TODO: This won't work with fluidboxes that have height and base_level.
+    local percent_to_fill = surrounding_fluidboxes_total_amount / surrounding_fluidboxes_total_capacity
+    for _, surrounding_fluidboxes in pairs(surrounding_fluidboxes_list) do
+      local fluid = surrounding_fluidboxes.fluidboxes[surrounding_fluidboxes.index]
+      fluid.amount = percent_to_fill * surrounding_fluidboxes.fluidboxes.get_capacity(surrounding_fluidboxes.index)
+      surrounding_fluidboxes.fluidboxes[surrounding_fluidboxes.index] = fluid
+    end
+  end
+end
+
+local function prevent_removal(event)
+  -- We can't just clone the entity and then let Factorio continue with the removal,
+  -- because that will prevent existing pipes from connecting to the new entity (they are still connected to the old).
+  -- We have to actively destroy it here.
+  local surface = event.entity.surface
+  local fluids = event.entity.get_fluid_contents()
+  local new_entity_params = {
+    name = event.entity.name,
+    position = event.entity.position,
+    direction = event.entity.direction,
+    force = event.entity.force,
+    create_build_effect_smoke = false,
+    spawn_decorations = false,
+  }
+
+  event.buffer.clear() -- Remove the resulting item from mining.
+
+  event.entity.destroy()
+  local new_entity = surface.create_entity(new_entity_params)
+  for fluid_name, fluid_amount in pairs(fluids) do
+    new_entity.insert_fluid({name = fluid_name, amount = fluid_amount})
+  end
+
+  -- Balance out surrounding fluidboxes (Factorio just pushed fluids from this entity to surrounding fluidboxes)
+  balance_surrounding_fluidboxes(new_entity.fluidbox)
+end
+
+local function on_player_removed_entity(event)
+  -- At this point Factorio has already transferred fluids if possible.
+  -- If there's any fluid left that means there was no space to transfer it.
+  if event.entity and event.entity.valid and table_size(event.entity.get_fluid_contents()) > 0 then
+
+    -- Ignore leftover small amounts.
+    local do_action = false
+    for _, amount in pairs(event.entity.get_fluid_contents()) do
+      if amount >= 1 then
+        do_action = true
+        break
+      end
+    end
+
+    if do_action then
+      prevent_removal(event)
+    end
+  end
+end
+
+
+local event_filter = {{filter = "type", type = "storage-tank"}, {filter = "type", type = "pipe"}}
+script.on_event(defines.events.on_player_mined_entity, on_player_removed_entity, event_filter)
+script.on_event(defines.events.on_robot_mined_entity, on_player_removed_entity, event_filter)
