@@ -47,7 +47,8 @@ local function on_player_removed_entity(event)
   -- If there's any fluid left that means there was no space to transfer it.
   if event.entity and event.entity.valid then
     local unit_number = event.entity.unit_number
-    if table_size(event.entity.get_fluid_contents()) > 0 then
+    local fluid_contents = event.entity.get_fluid_contents()
+    if table_size(fluid_contents) > 0 and is_any_undeletable(fluid_contents) then
       -- Ignore leftover small amounts.
       local do_action = false
       for _, amount in pairs(event.entity.get_fluid_contents()) do
@@ -107,11 +108,3 @@ local function on_pre_player_removed_entity(event)
 end
 script.on_event(defines.events.on_pre_player_mined_item , on_pre_player_removed_entity, event_filter)
 script.on_event(defines.events.on_robot_pre_mined, on_pre_player_removed_entity, event_filter)
-
-local function on_init()
-  -- unit number (of the mined entity) -> 
-  --   self: <table: fluidbox_id, fluid>, 
-  --   surrounding: table<entity -> <table: fluidbox_id, fluid>>
-  global.saved_surrounding_fluids_by_unit_number = {}
-end
-script.on_init(on_init)

@@ -1,4 +1,14 @@
-require("__core__/lualib/util.lua") -- Gets table.deepcopy
+function is_undeletable(fluid_name)
+  return global.undeletable_fluids[fluid_name] or table_size(global.undeletable_fluids) == 0
+end
+
+function is_any_undeletable(fluid_contents)
+  if table_size(global.undeletable_fluids) == 0 then return true end
+  for fluid_name, _amount in pairs(fluid_contents) do
+    if global.undeletable_fluids[fluid_name] then return true end
+  end
+  return false
+end
 
 function create_error_message(player_index, default_message, position)
   local player = game.get_player(player_index)

@@ -56,13 +56,15 @@ end
 
 
 local function on_player_flushed_fluid(event)
-  local action = settings.global["undeletable_fluids_flush_action"].value
-  if action == "prevent" then
-    prevent_flushing(event)
-  elseif action == "explosion" then
-    explosion(event)
-  elseif action == "atomic_explosion" then
-    atomic_explosion(event)
+  if is_undeletable(event.fluid) then
+    local action = settings.global["undeletable_fluids_flush_action"].value
+    if action == "prevent" then
+      prevent_flushing(event)
+    elseif action == "explosion" then
+      explosion(event)
+    elseif action == "atomic_explosion" then
+      atomic_explosion(event)
+    end
   end
 end
 script.on_event(defines.events.on_player_flushed_fluid, on_player_flushed_fluid)
