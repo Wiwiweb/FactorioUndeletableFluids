@@ -48,7 +48,6 @@ local function on_player_removed_entity(event)
   if event.entity and event.entity.valid then
     local unit_number = event.entity.unit_number
     if table_size(event.entity.get_fluid_contents()) > 0 then
-
       -- Ignore leftover small amounts.
       local do_action = false
       for _, amount in pairs(event.entity.get_fluid_contents()) do
@@ -59,7 +58,14 @@ local function on_player_removed_entity(event)
       end
 
       if do_action then
-        prevent_removal(event)
+        local action = settings.global["undeletable_fluids_removal_action"].value
+        if action == "prevent" then
+          prevent_removal(event)
+        elseif action == "explosion" then
+          explosion(event)
+        elseif action == "atomic_explosion" then
+          atomic_explosion(event)
+        end
       end
     end
     -- Removed saved fluids from the pre-mining
@@ -71,31 +77,32 @@ script.on_event(defines.events.on_player_mined_entity, on_player_removed_entity,
 script.on_event(defines.events.on_robot_mined_entity, on_player_removed_entity, event_filter)
 
 local function on_pre_player_removed_entity(event)
-  -- Save fluid amounts of entity and neighbours to potentially restore them during on_player_removed_entity
-  if event.entity and event.entity.valid and table_size(event.entity.get_fluid_contents()) > 0 then
-    local saved_self_fluids = {}
-    local saved_surrounding_fluids = {}
-    local mined_fluidbox = event.entity.fluidbox
+  if settings.global["undeletable_fluids_removal_action"].value == "prevent" then
+    -- Save fluid amounts of entity and neighbours to potentially restore them during on_player_removed_entity
+    if event.entity and event.entity.valid and table_size(event.entity.get_fluid_contents()) > 0 then
+      local saved_self_fluids = {}
+      local saved_surrounding_fluids = {}
+      local mined_fluidbox = event.entity.fluidbox
 
-    for i = 1, #mined_fluidbox do
-      local this_fluid_system_id = mined_fluidbox.get_fluid_system_id(i)
-      saved_self_fluids[i] = mined_fluidbox[i]
+      for i = 1, #mined_fluidbox do
+        local this_fluid_system_id = mined_fluidbox.get_fluid_system_id(i)
+        saved_self_fluids[i] = mined_fluidbox[i]
 
-      for _, connected_fluidboxes in pairs(mined_fluidbox.get_connections(i)) do
-        local this_entity_saved_fluids = {}
-        for j = 1, #connected_fluidboxes do
-          if connected_fluidboxes.get_fluid_system_id(j) == this_fluid_system_id then
-            this_entity_saved_fluids[j] = connected_fluidboxes[j] or "empty" -- Empty fluidboxes are `nil` which will mess with loop iteration later.
+        for _, connected_fluidboxes in pairs(mined_fluidbox.get_connections(i)) do
+          local this_entity_saved_fluids = {}
+          for j = 1, #connected_fluidboxes do
+            if connected_fluidboxes.get_fluid_system_id(j) == this_fluid_system_id then
+              this_entity_saved_fluids[j] = connected_fluidboxes[j] or "empty" -- Empty fluidboxes are `nil` which will mess with loop iteration later.
+            end
           end
+          saved_surrounding_fluids[connected_fluidboxes.owner] = this_entity_saved_fluids
         end
-        saved_surrounding_fluids[connected_fluidboxes.owner] = this_entity_saved_fluids
       end
+      global.saved_surrounding_fluids_by_unit_number[event.entity.unit_number] = {
+        self = saved_self_fluids,
+        surrounding = saved_surrounding_fluids
+      }
     end
-    global.saved_surrounding_fluids_by_unit_number[event.entity.unit_number] = {
-      self = saved_self_fluids,
-      surrounding = saved_surrounding_fluids
-    }
-    log(serpent.line(saved_surrounding_fluids))
   end
 end
 script.on_event(defines.events.on_pre_player_mined_item , on_pre_player_removed_entity, event_filter)
