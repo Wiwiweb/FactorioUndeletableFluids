@@ -33,6 +33,9 @@ local function prevent_flushing(event)
       i = i + 1
     end
 
+    -- Filling the system with an equal % of all fluidbox capacities
+    -- That works perfectly for vanilla pipes/tanks, 
+    -- with modded pipes/tanks with different base_area and heights things could be displaced but it's a good enough approximation.
     local percent_to_fill = event.amount / total_fluid_system_capacity
     -- log("nb fluidboxes: " .. table_size(fluidboxes_list))
     -- log("total_fluid_system_capacity: " .. total_fluid_system_capacity)
