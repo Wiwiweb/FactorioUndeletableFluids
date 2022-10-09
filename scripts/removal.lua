@@ -3,7 +3,6 @@ local function prevent_removal(event)
   -- because that will prevent existing pipes from connecting to the new entity (they are still connected to the old).
   -- We have to actively destroy it here.
   local surface = event.entity.surface
-  local fluids = event.entity.get_fluid_contents()
   local saved_surrounding_fluids = global.saved_surrounding_fluids_by_unit_number[event.entity.unit_number]
   local new_entity_params = {
     name = event.entity.name,
@@ -30,13 +29,7 @@ local function prevent_removal(event)
       end
     end
   else
-    log("NO SAVED FLUIDS!")
-    -- Insert old fluids
-    -- for fluid_name, fluid_amount in pairs(fluids) do
-    --   new_entity.insert_fluid({name = fluid_name, amount = fluid_amount})
-    -- end
-    -- Balance out surrounding fluidboxes (Factorio just pushed fluids from this entity to surrounding fluidboxes)
-    -- balance_surrounding_fluidboxes(new_entity.fluidbox)
+    log("Error: No saved fluids!")
   end
 
   create_error_message(event.player_index, {"undeletable-fluids.mining_prevented"}, new_entity_params.position)
@@ -48,34 +41,22 @@ local function on_player_removed_entity(event)
   if event.entity and event.entity.valid then
     local unit_number = event.entity.unit_number
     local fluid_contents = event.entity.get_fluid_contents()
-    if table_size(fluid_contents) > 0 and is_any_undeletable(fluid_contents) then
-      -- Ignore leftover small amounts.
-      local do_action = false
-      for _, amount in pairs(event.entity.get_fluid_contents()) do
-        if amount >= 1 then
-          do_action = true
-          break
-        end
-      end
-
-      if do_action then
-        local action = settings.global["undeletable_fluids_removal_action"].value
-        if action == "prevent" then
-          prevent_removal(event)
-        elseif action == "explosion" then
-          explosion(event)
-        elseif action == "atomic_explosion" then
-          atomic_explosion(event)
-        end
+    if table_size(fluid_contents) > 0 and is_any_undeletable(fluid_contents) and is_significant_fluid_amount(fluid_contents) then
+      local action = settings.global["undeletable_fluids_removal_action"].value
+      if action == "prevent" then
+        prevent_removal(event)
+      elseif action == "explosion" then
+        explosion(event)
+      elseif action == "atomic_explosion" then
+        atomic_explosion(event)
       end
     end
     -- Removed saved fluids from the pre-mining
     global.saved_surrounding_fluids_by_unit_number[unit_number] = nil
   end
 end
-local event_filter = {{filter = "type", type = "storage-tank"}, {filter = "type", type = "pipe"}}
-script.on_event(defines.events.on_player_mined_entity, on_player_removed_entity, event_filter)
-script.on_event(defines.events.on_robot_mined_entity, on_player_removed_entity, event_filter)
+script.on_event(defines.events.on_player_mined_entity, on_player_removed_entity, Event_filter)
+script.on_event(defines.events.on_robot_mined_entity, on_player_removed_entity, Event_filter)
 
 local function on_pre_player_removed_entity(event)
   if settings.global["undeletable_fluids_removal_action"].value == "prevent" then
@@ -106,5 +87,5 @@ local function on_pre_player_removed_entity(event)
     end
   end
 end
-script.on_event(defines.events.on_pre_player_mined_item , on_pre_player_removed_entity, event_filter)
-script.on_event(defines.events.on_robot_pre_mined, on_pre_player_removed_entity, event_filter)
+script.on_event(defines.events.on_pre_player_mined_item , on_pre_player_removed_entity, Event_filter)
+script.on_event(defines.events.on_robot_pre_mined, on_pre_player_removed_entity, Event_filter)

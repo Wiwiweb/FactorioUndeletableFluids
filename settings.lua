@@ -26,10 +26,24 @@ data:extend{
     order = "b"
   },
   {
+    type = "string-setting",
+    name = "undeletable_fluids_destruction_action",
+    setting_type = "runtime-global",
+    default_value = "explosion",
+    allowed_values = {
+      "nothing",
+      "prevent",
+      "explosion",
+      "atomic_explosion"
+    },
+    order = "c"
+  },
+  
+  {
     type = "bool-setting",
     name = "undeletable_fluids_nope",
     setting_type = "runtime-global",
     default_value = false,
-    order = "c"
+    order = "d"
   },
 }

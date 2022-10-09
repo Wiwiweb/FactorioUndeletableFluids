@@ -2,6 +2,7 @@ require("scripts/util")
 require("scripts/common")
 require("scripts/flush")
 require("scripts/removal")
+require("scripts/destruction")
 require("scripts/remote-interface")
 require("scripts/commands")
 

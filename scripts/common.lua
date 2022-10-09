@@ -1,3 +1,5 @@
+Event_filter = {{filter = "type", type = "storage-tank"}, {filter = "type", type = "pipe"}}
+
 function is_undeletable(fluid_name)
   return global.undeletable_fluids[fluid_name] or table_size(global.undeletable_fluids) == 0
 end
@@ -6,6 +8,15 @@ function is_any_undeletable(fluid_contents)
   if table_size(global.undeletable_fluids) == 0 then return true end
   for fluid_name, _amount in pairs(fluid_contents) do
     if global.undeletable_fluids[fluid_name] then return true end
+  end
+  return false
+end
+
+function is_significant_fluid_amount(fluid_contents)
+  for _, amount in pairs(fluid_contents) do
+    if amount >= 1 then
+      return true
+    end
   end
   return false
 end
