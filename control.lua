@@ -3,6 +3,7 @@ require("scripts/common")
 require("scripts/flush")
 require("scripts/removal")
 require("scripts/remote-interface")
+require("scripts/commands")
 
 local function on_init()
   -- unit number (of the mined entity) -> 
