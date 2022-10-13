@@ -4,6 +4,7 @@ local function prevent_removal(event)
   -- We have to actively destroy it here.
   local surface = event.entity.surface
   local saved_surrounding_fluids = global.saved_surrounding_fluids_by_unit_number[event.entity.unit_number]
+  local fluid_name = event.entity.fluidbox[1].name
   local new_entity_params = {
     name = event.entity.name,
     position = event.entity.position,
@@ -32,7 +33,7 @@ local function prevent_removal(event)
     log("Error: No saved fluids!")
   end
 
-  create_error_message(event.player_index, {"undeletable-fluids.mining_prevented"}, new_entity_params.position)
+  create_error_message(event.player_index, {"undeletable-fluids.mining_prevented"}, fluid_name, new_entity_params.position)
 end
 
 local function on_player_removed_entity(event)

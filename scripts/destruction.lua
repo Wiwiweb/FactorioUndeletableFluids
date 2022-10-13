@@ -4,6 +4,7 @@ local function prevent_destruction(event)
   -- We have to actively destroy it here.
   local surface = event.entity.surface
   local fluids = event.entity.get_fluid_contents()
+  local fluid_name = event.entity.fluidbox[1].name
   local new_entity_params = {
     name = event.entity.name,
     position = event.entity.position,
@@ -13,7 +14,6 @@ local function prevent_destruction(event)
     spawn_decorations = false,
   }
 
-  event.buffer.clear() -- Remove the resulting item from mining.
   event.entity.destroy() -- Destroy the old entity *before* creating the new one to ensure pipe connections.
   local new_entity = surface.create_entity(new_entity_params)
 
@@ -23,7 +23,9 @@ local function prevent_destruction(event)
     new_entity.insert_fluid({name = fluid, amount = amount})
   end
 
-  create_error_message(event.player_index, {"undeletable-fluids.mining_prevented"}, new_entity_params.position)
+  if event.cause and event.cause.player then
+    create_error_message(event.cause.player.index, {"undeletable-fluids.mining_prevented"}, fluid_name, new_entity_params.position)
+  end
 end
 
 local function on_entity_died(event)

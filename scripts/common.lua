@@ -21,10 +21,21 @@ function is_significant_fluid_amount(fluid_contents)
   return false
 end
 
-function create_error_message(player_index, default_message, position)
+function create_error_message(player_index, default_message, fluid_name, position)
   local player = game.get_player(player_index)
   if player then
-    local message = settings.global["undeletable_fluids_nope"].value and {"undeletable-fluids.nope"} or default_message
+
+    local message
+    if settings.global["undeletable_fluids_nope"].value then
+      message = {"undeletable-fluids.nope"}
+    elseif table_size(global.undeletable_fluids) > 0 then
+      local sprite_name = "fluid."..fluid_name
+      local localised_name = game.fluid_prototypes[fluid_name].localised_name
+      message = {default_message[1] .. '_specific_fluid', sprite_name, localised_name}
+    else
+      message = default_message
+    end
+
     local flying_text_params = {
       text = message
     }
