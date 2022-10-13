@@ -24,7 +24,7 @@ local function prevent_destruction(event)
   end
 
   if event.cause and event.cause.player then
-    create_error_message(event.cause.player.index, {"undeletable-fluids.mining_prevented"}, fluid_name, new_entity_params.position)
+    create_error_message(event.cause.player, {"undeletable-fluids.mining_prevented"}, fluid_name, new_entity_params.position)
   end
 end
 

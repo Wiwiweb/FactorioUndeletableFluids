@@ -48,7 +48,10 @@ local function prevent_flushing(event)
 
   end
 
-  create_error_message(event.player_index, {"undeletable-fluids.flush_prevented"}, event.fluid)
+  local player = game.get_player(event.player_index)
+  if player then
+    create_error_message(player, {"undeletable-fluids.flush_prevented"}, event.fluid)
+  end
 end
 
 

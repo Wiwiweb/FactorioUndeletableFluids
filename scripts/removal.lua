@@ -33,7 +33,26 @@ local function prevent_removal(event)
     log("Error: No saved fluids!")
   end
 
-  create_error_message(event.player_index, {"undeletable-fluids.mining_prevented"}, fluid_name, new_entity_params.position)
+  local player
+  local force
+  if event.player_index then
+    -- Removed by player
+    player = game.get_player(event.player_index)
+  elseif event.robot then
+    if event.robot.logistic_network and event.robot.logistic_network.cells[1] and event.robot.logistic_network.cells[1].owner.type == "character" then
+      -- Removed by personal bot
+      player = event.robot.logistic_network.cells[1].owner.player
+    else
+      -- Removed by bot
+      force = event.robot.force
+    end
+  end
+
+  if player then
+    create_error_message(player, {"undeletable-fluids.mining_prevented"}, fluid_name, new_entity_params.position)
+  elseif force then
+    create_error_message_for_force(force, {"undeletable-fluids.mining_prevented"}, fluid_name, new_entity_params.position)
+  end
 end
 
 local function on_player_removed_entity(event)

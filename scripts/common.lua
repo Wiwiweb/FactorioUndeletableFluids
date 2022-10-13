@@ -21,10 +21,15 @@ function is_significant_fluid_amount(fluid_contents)
   return false
 end
 
-function create_error_message(player_index, default_message, fluid_name, position)
-  local player = game.get_player(player_index)
-  if player then
+function create_error_message_for_force(force, default_message, fluid_name, position)
+  for _, player in pairs(force.players) do
+    create_error_message(player, default_message, fluid_name, position)
+  end
+end
 
+
+function create_error_message(player, default_message, fluid_name, position)
+  if player then
     local message
     if settings.global["undeletable_fluids_nope"].value then
       message = {"undeletable-fluids.nope"}
