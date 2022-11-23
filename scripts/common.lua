@@ -13,8 +13,9 @@ function is_any_undeletable(fluid_contents)
 end
 
 function is_significant_fluid_amount(fluid_contents)
+  local minimum_threshold = settings.global["undeletable_fluids_minimum_threshold"].value
   for _, amount in pairs(fluid_contents) do
-    if amount >= 1 then
+    if amount >= minimum_threshold then
       return true
     end
   end

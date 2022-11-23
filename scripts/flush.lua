@@ -1,4 +1,8 @@
 local function prevent_flushing(event)
+  if event.amount < settings.global["undeletable_fluids_minimum_threshold"].value then
+    return -- Don't prevent anything for fluid amounts below threshold.
+  end
+
   if event.only_this_entity then
     event.entity.insert_fluid(
       {name = event.fluid, amount = event.amount}
