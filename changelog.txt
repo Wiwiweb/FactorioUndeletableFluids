@@ -1,6 +1,6 @@
 ---------------------------------------------------------------------------------------------------
 Version: 1.0.1
-Date: ????
+Date: 2022-11-23
 
   Changes:
     - Added "minimum threshold" setting, which allows tanks and pipes to be deleted when they only have a little amount of fluid (default: 100).
