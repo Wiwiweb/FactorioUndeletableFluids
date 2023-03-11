@@ -1,7 +1,10 @@
 ---------------------------------------------------------------------------------------------------
 Version: 1.0.2
 Date: ????
+
   Changes:
+    - Removed the `/undeletable-fluids-nullius-preset` command, which will now be auto-applied when Nullius is detected.
+
 ---------------------------------------------------------------------------------------------------
 Version: 1.0.1
 Date: 2022-11-23
