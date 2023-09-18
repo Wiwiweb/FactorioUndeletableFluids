@@ -1,6 +1,6 @@
 ---------------------------------------------------------------------------------------------------
 Version: 1.0.3
-Date: ????
+Date: 2023-09-18
   Changes:
     - Added "deletable fluids" remote interface methods: `get/set/add/remove_deletable_fluid`. This can be used instead of the "undeletable" list by mods who want to restrict all fluids except a few. The "undeletable" list will be ignored if the "deletable" list is used.
 
