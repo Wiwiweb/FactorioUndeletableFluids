@@ -44,11 +44,13 @@ local function on_init()
   global.saved_surrounding_fluids_by_unit_number = {}
   -- set of fluid names
   global.undeletable_fluids = {}
+  global.deletable_fluids = {}
   check_for_nullius()
 end
 script.on_init(on_init)
 
 local function on_configuration_changed()
   check_for_nullius()
+  global.deletable_fluids = global.deletable_fluids or {} -- Lazy man's migration
 end
 script.on_configuration_changed(on_configuration_changed)
