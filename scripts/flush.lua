@@ -25,8 +25,11 @@ local function prevent_flushing(event)
         for j = 1, #entity_fluidboxes do
           if entity_fluidboxes.get_fluid_system_id(j) == this_fluid_system_id then
             -- This fluidbox is part of the system
-            total_fluid_system_capacity = total_fluid_system_capacity + entity_fluidboxes.get_capacity(j)
-            table.insert(fluidboxes_list, entity_fluidboxes)
+            if entity_fluidboxes[j] == nil then
+              -- This fluidbox is empty (it had the fluid that was just flushed)
+              total_fluid_system_capacity = total_fluid_system_capacity + entity_fluidboxes.get_capacity(j)
+              table.insert(fluidboxes_list, entity_fluidboxes)
+            end
             for _, connected_fluidboxes in pairs(entity_fluidboxes.get_connections(j)) do
               table.insert(fluidboxes_to_process, connected_fluidboxes)
             end
