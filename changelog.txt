@@ -1,7 +1,9 @@
 ---------------------------------------------------------------------------------------------------
 Version: 1.0.4
 Date: ????
-  Changes:
+  Bugfixes:
+    - Fixed destroying a fluid (with "Prevent destruction" setting) not preserving temperature.
+
 ---------------------------------------------------------------------------------------------------
 Version: 1.0.3
 Date: 2023-09-18
