@@ -1,13 +1,8 @@
 ---------------------------------------------------------------------------------------------------
 Version: 1.0.4
 Date: ????
-  Bugfixes:
-    - Fixed some fluids disappearing when trying to flush a fluid in a system that had multiple fluids.
-    - Fixed destroying a fluid (with "Prevent destruction" setting) not preserving temperature.
-
-  Info:
-    - KNOWN BUG: Attempting to flush fluids will reset the fluid to its default temperature. Be careful around steam!
-      The fix for this bug will require an API change: https://forums.factorio.com/viewtopic.php?f=28&t=109233
+  Changes:
+    - Updated for Factorio 2.0.
 
 ---------------------------------------------------------------------------------------------------
 Version: 1.0.3

@@ -3,8 +3,8 @@
     "version": "1.0.4",
     "title": "Undeletable fluids",
     "author": "Wiwiweb",
-    "factorio_version": "1.1",
-    "dependencies": ["base >= 1.1"],
+    "factorio_version": "2.0",
+    "dependencies": ["base >= 2.0"],
     "description": "Prevents the flushing of fluids in pipes and tanks. Use this to prevent cheesing the disposal of byproducts.",
     "package": {
       "git_publish_branch": "main",
