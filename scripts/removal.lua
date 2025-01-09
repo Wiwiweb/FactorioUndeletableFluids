@@ -3,7 +3,7 @@ local function prevent_removal(event)
   -- because that will prevent existing pipes from connecting to the new entity (they are still connected to the old).
   -- We have to actively destroy it here.
   local surface = event.entity.surface
-  local saved_surrounding_fluids = global.saved_surrounding_fluids_by_unit_number[event.entity.unit_number]
+  local saved_surrounding_fluids = storage.saved_surrounding_fluids_by_unit_number[event.entity.unit_number]
   local fluid_name = event.entity.fluidbox[1].name
   local new_entity_params = {
     name = event.entity.name,
@@ -72,7 +72,7 @@ local function on_player_removed_entity(event)
       end
     end
     -- Removed saved fluids from the pre-mining
-    global.saved_surrounding_fluids_by_unit_number[unit_number] = nil
+    storage.saved_surrounding_fluids_by_unit_number[unit_number] = nil
   end
 end
 script.on_event(defines.events.on_player_mined_entity, on_player_removed_entity, Event_filter)
@@ -100,7 +100,7 @@ local function on_pre_player_removed_entity(event)
           saved_surrounding_fluids[connected_fluidboxes.owner] = this_entity_saved_fluids
         end
       end
-      global.saved_surrounding_fluids_by_unit_number[event.entity.unit_number] = {
+      storage.saved_surrounding_fluids_by_unit_number[event.entity.unit_number] = {
         self = saved_self_fluids,
         surrounding = saved_surrounding_fluids
       }

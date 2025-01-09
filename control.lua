@@ -31,9 +31,9 @@ local function check_for_nullius()
       "nullius-biodiesel",
       "nullius-copper-solution",
     }
-    global.undeletable_fluids = list_to_set(undeletable_fluids)
+    storage.undeletable_fluids = list_to_set(undeletable_fluids)
   else
-    global.undeletable_fluids = {}
+    storage.undeletable_fluids = {}
   end
 end
 
@@ -41,16 +41,16 @@ local function on_init()
   -- unit number (of the mined entity) -> 
   --   self: <table: fluidbox_id -> fluid>, 
   --   surrounding: table<entity -> <table: fluidbox_id -> fluid>>
-  global.saved_surrounding_fluids_by_unit_number = {}
+  storage.saved_surrounding_fluids_by_unit_number = {}
   -- set of fluid names
-  global.undeletable_fluids = {}
-  global.deletable_fluids = {}
+  storage.undeletable_fluids = {}
+  storage.deletable_fluids = {}
   check_for_nullius()
 end
 script.on_init(on_init)
 
 local function on_configuration_changed()
   check_for_nullius()
-  global.deletable_fluids = global.deletable_fluids or {} -- Lazy man's migration
+  storage.deletable_fluids = storage.deletable_fluids or {} -- Lazy man's migration
 end
 script.on_configuration_changed(on_configuration_changed)

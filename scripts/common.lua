@@ -1,27 +1,27 @@
 Event_filter = {{filter = "type", type = "storage-tank"}, {filter = "type", type = "pipe"}}
 
 function is_undeletable(fluid_name)
-  if table_size(global.deletable_fluids) > 0 then
-    return not global.deletable_fluids[fluid_name]
-  elseif table_size(global.undeletable_fluids) > 0 then
-    return global.undeletable_fluids[fluid_name]
+  if table_size(storage.deletable_fluids) > 0 then
+    return not storage.deletable_fluids[fluid_name]
+  elseif table_size(storage.undeletable_fluids) > 0 then
+    return storage.undeletable_fluids[fluid_name]
   else
     return true -- No lists, everything is undeletable
   end
 end
 
 function is_any_undeletable(fluid_contents)
-  if (table_size(global.deletable_fluids) > 0) then
+  if (table_size(storage.deletable_fluids) > 0) then
     -- Whitelist
     for fluid_name, _amount in pairs(fluid_contents) do
-      if not global.deletable_fluids[fluid_name] then return true end
+      if not storage.deletable_fluids[fluid_name] then return true end
     end
     return false
   else
     -- Blacklist
-    if table_size(global.undeletable_fluids) == 0 then return true end -- No lists, everything is undeletable
+    if table_size(storage.undeletable_fluids) == 0 then return true end -- No lists, everything is undeletable
     for fluid_name, _amount in pairs(fluid_contents) do
-      if global.undeletable_fluids[fluid_name] then return true end
+      if storage.undeletable_fluids[fluid_name] then return true end
     end
     return false
   end
@@ -49,9 +49,9 @@ function create_error_message(player, default_message, fluid_name, position)
     local message
     if settings.global["undeletable_fluids_nope"].value then
       message = {"undeletable-fluids.nope"}
-    elseif table_size(global.undeletable_fluids) > 0 or table_size(global.deletable_fluids) > 0 then
+    elseif table_size(storage.undeletable_fluids) > 0 or table_size(storage.deletable_fluids) > 0 then
       local sprite_name = "fluid."..fluid_name
-      local localised_name = game.fluid_prototypes[fluid_name].localised_name
+      local localised_name = prototypes.fluid[fluid_name].localised_name
       message = {default_message[1] .. '_specific_fluid', sprite_name, localised_name}
     else
       message = default_message
