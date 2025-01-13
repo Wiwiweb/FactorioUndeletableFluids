@@ -3,8 +3,6 @@ local function prevent_removal(event)
   -- because that will prevent existing pipes from connecting to the new entity (they are still connected to the old).
   -- We have to actively destroy it here.
   local surface = event.entity.surface
-  local saved_surrounding_fluids = storage.saved_surrounding_fluids_by_unit_number[event.entity.unit_number]
-  local fluid_name = event.entity.fluidbox[1].name
   local new_entity_params = {
     name = event.entity.name,
     position = event.entity.position,
@@ -14,24 +12,25 @@ local function prevent_removal(event)
     spawn_decorations = false,
   }
 
+  local saved_fluid_segments_fluids = {}
+  local fluidboxes = event.entity.fluidbox
+  for i = 1, #fluidboxes do
+    saved_fluid_segments_fluids[i] = event.entity.get_fluid(i)
+  end
+
   event.buffer.clear() -- Remove the resulting item from mining.
   event.entity.destroy() -- Destroy the old entity *before* creating the new one to ensure pipe connections.
   local new_entity = surface.create_entity(new_entity_params)
 
-  -- Restore fluids as they were during pre-mining
-  if saved_surrounding_fluids then
-    for index, fluid in pairs(saved_surrounding_fluids.self) do
-      new_entity.fluidbox[index] = fluid
-    end
-    for entity, fluid_table in pairs(saved_surrounding_fluids.surrounding) do
-      for index, fluid in pairs(fluid_table) do
-        if fluid == "empty" then fluid = nil end
-        entity.fluidbox[index] = fluid
-      end
-    end
-  else
-    log("Error: No saved fluids!")
+  -- Restore fluids
+  local new_fluidboxes = new_entity.fluidbox
+  for i = 1, #new_fluidboxes do
+    new_fluidboxes[i] = saved_fluid_segments_fluids[i]
   end
+
+  -- Can't undo the +1 deconstruction on time graphs but let's at least undo them in the All graph
+  local construction_stats = new_entity.force.get_entity_build_count_statistics(surface)
+  construction_stats.set_output_count(new_entity.name, construction_stats.get_output_count(new_entity.name) - 1)
 
   local player
   local force
@@ -39,6 +38,9 @@ local function prevent_removal(event)
     -- Removed by player
     player = game.get_player(event.player_index)
   elseif event.robot then
+    -- As far as I know this can't happen in 2.0
+    -- Because marking a tank for deconstruction disconnects it from fluid networks
+    -- But just in case...
     if event.robot.logistic_network and event.robot.logistic_network.cells[1] and event.robot.logistic_network.cells[1].owner.type == "character" then
       -- Removed by personal bot
       player = event.robot.logistic_network.cells[1].owner.player
@@ -48,6 +50,7 @@ local function prevent_removal(event)
     end
   end
 
+  local fluid_name = new_fluidboxes[1].name -- Good enough
   if player then
     create_error_message(player, {"undeletable-fluids.mining_prevented"}, fluid_name, new_entity_params.position)
   elseif force then
@@ -55,13 +58,32 @@ local function prevent_removal(event)
   end
 end
 
+-- Checks if removing this entity would cause fluid deletion
+local function would_fluid_be_deleted(entity)
+  local entity_capacity = entity.prototype.fluid_capacity
+  local fluidboxes = entity.fluidbox
+  for i = 1, #fluidboxes do
+    local fluid_segment_contents = entity.get_fluid(i)
+    local fluid_segment_capacity = fluidboxes.get_capacity(i)
+    if fluid_segment_capacity - entity_capacity < fluid_segment_contents.amount then
+      return true
+    end
+  end
+  return false
+end
+
 local function on_player_removed_entity(event)
-  -- At this point Factorio has already transferred fluids if possible.
-  -- If there's any fluid left that means there was no space to transfer it.
+  -- At this point in 2.0, Factorio has yet to transfer fluids
   if event.entity and event.entity.valid then
-    local unit_number = event.entity.unit_number
     local fluid_contents = event.entity.get_fluid_contents()
-    if table_size(fluid_contents) > 0 and is_any_undeletable(fluid_contents) and is_significant_fluid_amount(fluid_contents) then
+    -- Technically there are some uncaught edge cases with tanks that have >1 fluidboxes, 
+    -- e.g. a tank that has a large amount of a deletable fluid, and an unsignificant amount of an undeletable fluid, would be wrongly prevented from deletion,
+    -- but I'm not aware of any mod using >1 fluidboxes for a tank, so good enough.
+    if table_size(fluid_contents) > 0
+      and is_any_undeletable(fluid_contents)
+      and is_significant_fluid_amount(fluid_contents)
+      and would_fluid_be_deleted(event.entity)
+    then
       local action = settings.global["undeletable_fluids_removal_action"].value
       if action == "prevent" then
         prevent_removal(event)
@@ -71,41 +93,9 @@ local function on_player_removed_entity(event)
         atomic_explosion(event)
       end
     end
-    -- Removed saved fluids from the pre-mining
-    storage.saved_surrounding_fluids_by_unit_number[unit_number] = nil
   end
 end
 script.on_event(defines.events.on_player_mined_entity, on_player_removed_entity, Event_filter)
-script.on_event(defines.events.on_robot_mined_entity, on_player_removed_entity, Event_filter)
+-- script.on_event(defines.events.on_robot_mined_entity, on_player_removed_entity, Event_filter)
 
-local function on_pre_player_removed_entity(event)
-  if settings.global["undeletable_fluids_removal_action"].value == "prevent" then
-    -- Save fluid amounts of entity and neighbours to potentially restore them during on_player_removed_entity
-    if event.entity and event.entity.valid and table_size(event.entity.get_fluid_contents()) > 0 then
-      local saved_self_fluids = {}
-      local saved_surrounding_fluids = {}
-      local mined_fluidbox = event.entity.fluidbox
-
-      for i = 1, #mined_fluidbox do
-        local this_fluid_system_id = mined_fluidbox.get_fluid_system_id(i)
-        saved_self_fluids[i] = mined_fluidbox[i]
-
-        for _, connected_fluidboxes in pairs(mined_fluidbox.get_connections(i)) do
-          local this_entity_saved_fluids = {}
-          for j = 1, #connected_fluidboxes do
-            if connected_fluidboxes.get_fluid_system_id(j) == this_fluid_system_id then
-              this_entity_saved_fluids[j] = connected_fluidboxes[j] or "empty" -- Empty fluidboxes are `nil` which will mess with loop iteration later.
-            end
-          end
-          saved_surrounding_fluids[connected_fluidboxes.owner] = this_entity_saved_fluids
-        end
-      end
-      storage.saved_surrounding_fluids_by_unit_number[event.entity.unit_number] = {
-        self = saved_self_fluids,
-        surrounding = saved_surrounding_fluids
-      }
-    end
-  end
-end
-script.on_event(defines.events.on_pre_player_mined_item , on_pre_player_removed_entity, Event_filter)
-script.on_event(defines.events.on_robot_pre_mined, on_pre_player_removed_entity, Event_filter)
+-- script.on_event(defines.events.on_marked_for_deconstruction, on_pre_player_removed_entity, Event_filter)
