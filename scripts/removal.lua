@@ -10,6 +10,7 @@ local function prevent_removal(event)
     force = event.entity.force,
     create_build_effect_smoke = false,
     spawn_decorations = false,
+    raise_built = true,
   }
 
   local saved_fluid_segments_fluids = {}
@@ -75,6 +76,7 @@ end
 local function on_player_removed_entity(event)
   -- At this point in 2.0, Factorio has yet to transfer fluids
   if event.entity and event.entity.valid then
+    storage.storage_tanks_by_unit_number[event.entity.unit_number] = nil
     local fluid_contents = event.entity.get_fluid_contents()
     -- Technically there are some uncaught edge cases with tanks that have >1 fluidboxes, 
     -- e.g. a tank that has a large amount of a deletable fluid, and an unsignificant amount of an undeletable fluid, would be wrongly prevented from deletion,
@@ -95,7 +97,60 @@ local function on_player_removed_entity(event)
     end
   end
 end
-script.on_event(defines.events.on_player_mined_entity, on_player_removed_entity, Event_filter)
--- script.on_event(defines.events.on_robot_mined_entity, on_player_removed_entity, Event_filter)
+script.on_event(defines.events.on_player_mined_entity, on_player_removed_entity, Tanks_and_pipes_event_filter)
+-- Don't catch on_robot_mined_entity because robots can't mine storage tanks that are not marked for deconstruction anyway
 
--- script.on_event(defines.events.on_marked_for_deconstruction, on_pre_player_removed_entity, Event_filter)
+local function on_marked_for_deconstruction(event)
+  local entity = event.entity
+  local previous_tick_info = storage.storage_tanks_by_unit_number[entity.unit_number]
+  log("entity " .. entity.unit_number .. " marked for deletion - previous_tick_info: " .. serpent.line(previous_tick_info))
+  if previous_tick_info == nil then
+    return -- We missed this one somehow, we have nothing to go by
+  end
+
+  local minimum_fluid_threshold = settings.global["undeletable_fluids_minimum_threshold"].value
+  local entity_capacity = entity.prototype.fluid_capacity
+
+  local undeleted_fluid_name
+  for i = 1, #entity.fluidbox do
+    local previous_tick_fluidbox_info = previous_tick_info.fluidboxes[i]
+
+    if previous_tick_fluidbox_info.contents ~= nil
+       and is_undeletable(previous_tick_fluidbox_info.contents.name)
+       and previous_tick_fluidbox_info.contents.amount > minimum_fluid_threshold
+    then
+
+      local previous_tick_segment_info = previous_tick_fluidbox_info.fluid_segment_info
+      local previous_tick_segment_amount = -previous_tick_fluidbox_info.contents.amount -- Only count the segment without this entity
+      for _fluid_name, amount in pairs(previous_tick_segment_info.contents) do
+        previous_tick_segment_amount = previous_tick_segment_amount + amount
+      end
+      local segment_capacity = previous_tick_segment_info.capacity - entity_capacity
+      local previous_tick_segment_free_space = segment_capacity - previous_tick_segment_amount
+
+      -- Did the segment not have enough space to receive this tank's fluid?
+      local fluid_overflow = previous_tick_fluidbox_info.contents.amount - previous_tick_segment_free_space
+      if fluid_overflow > 0 then
+        -- Unmark for deconstruction and put the fluid back
+        undeleted_fluid_name = previous_tick_fluidbox_info.contents.name
+        entity.cancel_deconstruction(entity.force)
+        local fluid = {
+          name = undeleted_fluid_name,
+          amount = fluid_overflow,
+          temperature = previous_tick_fluidbox_info.contents.temperature,
+        }
+        entity.insert_fluid(fluid)
+      end
+    end
+  end
+
+  if undeleted_fluid_name then
+    local player = game.get_player(event.player_index)
+    if player then
+      create_error_message(player, {"undeletable-fluids.mining_prevented"}, undeleted_fluid_name, entity.position)
+    else
+      create_error_message_for_force(entity.force, {"undeletable-fluids.mining_prevented"}, undeleted_fluid_name, entity.position)
+    end
+  end
+end
+script.on_event(defines.events.on_marked_for_deconstruction, on_marked_for_deconstruction, Tanks_and_pipes_event_filter)

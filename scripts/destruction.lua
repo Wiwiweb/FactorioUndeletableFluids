@@ -19,6 +19,7 @@ local function prevent_destruction(event)
     force = entity.force,
     create_build_effect_smoke = false,
     spawn_decorations = false,
+    raise_built = true,
   }
 
   entity.destroy() -- Destroy the old entity *before* creating the new one to ensure pipe connections.
@@ -38,6 +39,7 @@ end
 
 local function on_entity_died(event)
   if event.entity and event.entity.valid then
+    storage.storage_tanks_by_unit_number[event.entity.unit_number] = nil
     local fluid_contents = event.entity.get_fluid_contents()
     if table_size(fluid_contents) > 0 and is_any_undeletable(fluid_contents) and is_significant_fluid_amount(fluid_contents) then
       local action = settings.global["undeletable_fluids_destruction_action"].value
@@ -52,4 +54,4 @@ local function on_entity_died(event)
   end
 
 end
-script.on_event(defines.events.on_entity_died, on_entity_died, Event_filter)
+script.on_event(defines.events.on_entity_died, on_entity_died, Tanks_and_pipes_event_filter)

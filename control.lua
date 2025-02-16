@@ -3,6 +3,7 @@ require("scripts/common")
 require("scripts/flush")
 require("scripts/removal")
 require("scripts/destruction")
+require("scripts/tank-contents-tracking")
 require("scripts/remote-interface")
 
 local function check_for_nullius()
@@ -41,7 +42,15 @@ local function on_init()
   -- set of fluid names
   storage.undeletable_fluids = {}
   storage.deletable_fluids = {}
+  storage.storage_tanks_by_unit_number = {}
   check_for_nullius()
+
+  for _, surface in pairs(game.surfaces) do
+    local tanks = surface.find_entities_filtered({type="storage-tank"})
+    for _, tank in pairs(tanks) do
+      on_new_storage_tank(tank)
+    end
+  end
 end
 script.on_init(on_init)
 
@@ -50,6 +59,6 @@ local function on_configuration_changed()
 
   -- Lazy man's migrations
   storage.deletable_fluids = storage.deletable_fluids or {}
-  storage.saved_surrounding_fluids_by_unit_number = nil
+  storage.storage_tanks_by_unit_id = storage.storage_tanks_by_unit_id or {}
 end
 script.on_configuration_changed(on_configuration_changed)

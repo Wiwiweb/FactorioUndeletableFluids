@@ -1,4 +1,5 @@
-Event_filter = {{filter = "type", type = "storage-tank"}, {filter = "type", type = "pipe"}}
+Tanks_event_filter = {{filter = "type", type = "storage-tank"}}
+Tanks_and_pipes_event_filter = {{filter = "type", type = "storage-tank"}, {filter = "type", type = "pipe"}}
 
 function is_undeletable(fluid_name)
   if table_size(storage.deletable_fluids) > 0 then
