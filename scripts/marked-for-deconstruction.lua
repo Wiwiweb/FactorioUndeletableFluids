@@ -31,7 +31,7 @@ end
 local function on_marked_for_deconstruction(event)
   local entity = event.entity
   local previous_tick_info = storage.storage_tanks_by_unit_number[entity.unit_number]
-  log("entity " .. entity.unit_number .. " marked for deletion - previous_tick_info: " .. serpent.line(previous_tick_info))
+  -- log("entity " .. entity.unit_number .. " marked for deletion - previous_tick_info: " .. serpent.line(previous_tick_info))
   if previous_tick_info == nil then
     return -- We missed this one somehow, we have nothing to go by
   end
@@ -71,13 +71,13 @@ script.on_event(defines.events.on_marked_for_deconstruction, on_marked_for_decon
 function handle_deconstructions()
   local unit_number_deconstruction_cancelled = {}
   for segment_id, segment_info in pairs(this_tick_deconstructed_segments) do
-    log("handling fluid segment " .. segment_id .. " deconstruction: " .. serpent.line(segment_info))
+    -- log("handling fluid segment " .. segment_id .. " deconstruction: " .. serpent.line(segment_info))
     -- Did this segment overflow?
     -- local segment_free_space = (segment_info.capacity - segment_info.capacity_lost) - (segment_info.fluid_amount - segment_info.displaced_fluid_amount)
     -- local fluid_overflow = segment_info.displaced_fluid_amount - segment_free_space
     local fluid_overflow = segment_info.fluid_amount - (segment_info.capacity - segment_info.capacity_lost)
     if fluid_overflow > 0 then
-      log("fluid segment " .. segment_id .. " overflowed by " .. fluid_overflow)
+      -- log("fluid segment " .. segment_id .. " overflowed by " .. fluid_overflow)
       -- Go through every entity that was marked for deconstruction and cancel that
       local last_entity
       for unit_number, entity in pairs(segment_info.deconstructed_entities) do
