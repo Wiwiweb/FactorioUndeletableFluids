@@ -2,6 +2,7 @@ require("scripts/util")
 require("scripts/common")
 require("scripts/flush")
 require("scripts/removal")
+require("scripts/marked-for-deconstruction")
 require("scripts/destruction")
 require("scripts/tank-contents-tracking")
 require("scripts/remote-interface")
@@ -38,10 +39,22 @@ local function check_for_nullius()
   end
 end
 
+---@class StorageTankInfo
+---@field entity LuaEntity
+---@field fluidboxes FluidboxInfo[]
+
+---@class FluidboxInfo
+---@field contents Fluid?
+---@field fluid_segment_id uint
+---@field fluid_segment_contents { [string]: uint }
+---@field fluid_segment_capacity uint
+
 local function on_init()
   -- set of fluid names
   storage.undeletable_fluids = {}
   storage.deletable_fluids = {}
+
+  ---@type StorageTankInfo[]
   storage.storage_tanks_by_unit_number = {}
   check_for_nullius()
 
@@ -59,6 +72,6 @@ local function on_configuration_changed()
 
   -- Lazy man's migrations
   storage.deletable_fluids = storage.deletable_fluids or {}
-  storage.storage_tanks_by_unit_id = storage.storage_tanks_by_unit_id or {}
+  storage.storage_tanks_by_unit_number = storage.storage_tanks_by_unit_number or {}
 end
 script.on_configuration_changed(on_configuration_changed)
