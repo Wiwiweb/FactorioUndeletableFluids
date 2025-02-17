@@ -41,6 +41,7 @@ end
 
 ---@class StorageTankInfo
 ---@field entity LuaEntity
+---@field single_fluidbox boolean For optimization
 ---@field fluidboxes FluidboxInfo[]
 
 ---@class FluidboxInfo
