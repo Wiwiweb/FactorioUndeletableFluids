@@ -12,7 +12,6 @@
 ---@field deconstructed_entities { [uint]: LuaEntity }
 ---@field fluid_name string
 ---@field fluid_amount float
----@field fluid_temperature float
 ---@field capacity uint
 ---@field capacity_lost uint
 
@@ -24,7 +23,7 @@ local function get_entity_capacity(entity)
   local capacity = capacity_cache[entity.name]
   if capacity == nil then
     capacity = entity.prototype.fluid_capacity
-    capacity_cache[entity.name] =capacity
+    capacity_cache[entity.name] = capacity
   end
   return capacity
 end
@@ -42,9 +41,11 @@ local function on_marked_for_deconstruction(event)
   for i = 1, #entity.fluidbox do
     local previous_tick_fluidbox_info = previous_tick_info.fluidboxes[i]
 
-    if previous_tick_fluidbox_info.contents ~= nil
-       and is_undeletable(previous_tick_fluidbox_info.contents.name)
-       and previous_tick_fluidbox_info.contents.amount > minimum_fluid_threshold
+    local fluid_name, fluid_amount = next(previous_tick_fluidbox_info.fluid_segment_contents) -- There's only ever 0 or 1
+
+    if fluid_name ~= nil
+       and is_undeletable(fluid_name)
+       and fluid_amount > minimum_fluid_threshold
     then
 
       local fluid_segment_id = previous_tick_fluidbox_info.fluid_segment_id
@@ -54,9 +55,8 @@ local function on_marked_for_deconstruction(event)
 
       this_tick_deconstructed_segments[fluid_segment_id] = this_tick_deconstructed_segments[fluid_segment_id] or {
         deconstructed_entities = {},
-        fluid_name = previous_tick_fluidbox_info.contents.name,
-        fluid_amount = previous_tick_fluidbox_info.fluid_segment_contents[previous_tick_fluidbox_info.contents.name],
-        fluid_temperature = previous_tick_fluidbox_info.contents.temperature,
+        fluid_name = fluid_name,
+        fluid_amount = fluid_amount,
         capacity = previous_tick_fluidbox_info.fluid_segment_capacity,
         capacity_lost = 0,
       }
@@ -79,7 +79,7 @@ function handle_deconstructions()
     if fluid_overflow > 0 then
       log("fluid segment " .. segment_id .. " overflowed by " .. fluid_overflow)
       -- Go through every entity that was marked for deconstruction and cancel that
-      local last_entity = nil
+      local last_entity
       for unit_number, entity in pairs(segment_info.deconstructed_entities) do
         if not unit_number_deconstruction_cancelled[unit_number] then -- If we didn't do that one already (might happen if an entity belongs to 2 fluid segments)
           last_entity = entity
@@ -97,8 +97,11 @@ function handle_deconstructions()
       local fluid = {
         name = segment_info.fluid_name,
         amount = fluid_overflow,
-        temperature = segment_info.fluid_temperature,
       }
+      local current_fluid = last_entity.fluidbox[1] -- Eh good enough
+      if current_fluid then
+        fluid.temperature = current_fluid.temperature
+      end
       last_entity.insert_fluid(fluid)
     end
   end

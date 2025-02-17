@@ -25,7 +25,6 @@ local function on_tick()
           }
         end
         tank_info.fluidboxes[1] = {
-          contents = entity.fluidbox[1],
           fluid_segment_id = fluid_segment_id,
           fluid_segment_contents = fluid_segment_infos_by_id[fluid_segment_id].contents,
           fluid_segment_capacity = fluid_segment_infos_by_id[fluid_segment_id].capacity,
@@ -41,7 +40,6 @@ local function on_tick()
               }
             end
             tank_info.fluidboxes[i] = {
-              contents = entity.fluidbox[i],
               fluid_segment_id = fluid_segment_id,
               fluid_segment_contents = fluid_segment_infos_by_id[fluid_segment_id].contents,
               fluid_segment_capacity = fluid_segment_infos_by_id[fluid_segment_id].capacity,
@@ -62,7 +60,6 @@ function on_new_storage_tank(entity)
   }
   for i = 1, #entity.fluidbox do
     table.insert(tank_info.fluidboxes, {
-      contents = entity.fluidbox[i],
       fluid_segment_id = entity.fluidbox.get_fluid_segment_id(i),
       fluid_segment_info = {
         content = entity.fluidbox.get_fluid_segment_contents(i),

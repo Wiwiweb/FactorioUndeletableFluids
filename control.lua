@@ -45,7 +45,6 @@ end
 ---@field fluidboxes FluidboxInfo[]
 
 ---@class FluidboxInfo
----@field contents Fluid?
 ---@field fluid_segment_id uint
 ---@field fluid_segment_contents { [string]: uint }
 ---@field fluid_segment_capacity uint
@@ -55,7 +54,7 @@ local function on_init()
   storage.undeletable_fluids = {}
   storage.deletable_fluids = {}
 
-  ---@type StorageTankInfo[]
+  ---@type { [uint]: StorageTankInfo }
   storage.storage_tanks_by_unit_number = {}
   check_for_nullius()
 
