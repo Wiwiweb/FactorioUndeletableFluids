@@ -71,16 +71,19 @@ script.on_event(defines.events.on_marked_for_deconstruction, on_marked_for_decon
 function handle_deconstructions()
   for segment_id, segment_info in pairs(this_tick_deconstructed_segments) do
     -- log("handling fluid segment " .. segment_id .. " deconstruction: " .. serpent.line(segment_info))
+
     -- Did this segment overflow?
+    -- TODO: Fluid can also disappear without overflow if the game engine did not push the fluid out optimally. How to deal with this?
+
     -- local segment_free_space = (segment_info.capacity - segment_info.capacity_lost) - (segment_info.fluid_amount - segment_info.displaced_fluid_amount)
     -- local fluid_overflow = segment_info.displaced_fluid_amount - segment_free_space
     -- The above 2 lines can simplify to the line below:
     local fluid_overflow = segment_info.fluid_amount - (segment_info.capacity - segment_info.capacity_lost)
     if fluid_overflow > 0 then
       -- log("fluid segment " .. segment_id .. " overflowed by " .. fluid_overflow)
-      -- Go through every entity that was marked for deconstruction and cancel that
-      local unit_number_deconstruction_cancelled = {}
 
+      -- 1) Iterate through every entity that was marked for deconstruction and cancel that
+      local unit_number_deconstruction_cancelled = {}
       for unit_number, entity in pairs(segment_info.deconstructed_entities) do
         if not unit_number_deconstruction_cancelled[unit_number] then -- If we didn't do that one already (might happen if an entity belongs to 2 fluid segments)
           local force = entity.force
@@ -94,31 +97,31 @@ function handle_deconstructions()
         end
       end
 
-      -- Now insert back the overflowed fluid into entities, until we inserted all of it back
-      local fluid = {
-        name = segment_info.fluid_name,
-        amount = fluid_overflow,
-      }
+      -- 2) Iterate through all entities again and see how many fluid segments they are now part of
 
-      -- In most cases this will only take 1 iteration.
-      -- But because of the special case where the deconstruction order has split this segment into multiple segments,
-      -- we do have to iterate over all entities.
+      -- In most cases this will be only 1 segment,
+      -- but sometimes the deconstruction and re/construction could have split this segment into multiples
       -- e.g. full tank - pipe - full tank
+
+      local reconstructed_segments_fluid_amount = {}
       for _unit_number, entity in pairs(segment_info.deconstructed_entities) do
-        local current_fluid = entity.fluidbox[1] -- TODO: This isn't a great way to keep temperature, should try and save temp values in the on_tick if possible
-        if current_fluid then
-          fluid.temperature = current_fluid.temperature
-        end
-        local fluid_inserted = entity.insert_fluid(fluid)
-        fluid.amount = fluid.amount - fluid_inserted
-        if fluid.amount <= 0 then
-          break
+         -- TODO: Handle entities with multiple segments
+        local reconstructed_segment_id = entity.fluidbox.get_fluid_segment_id(1) --[[@as uint]]
+        if not reconstructed_segments_fluid_amount[reconstructed_segment_id] then
+          reconstructed_segments_fluid_amount[reconstructed_segment_id] = entity
         end
       end
 
-      -- if fluid.amount ~= 0 then
-      --   log("fluid segment " .. segment_id .. " ended up with non-0 overflowing: " .. fluid.amount)
-      -- end
+      -- 3) Finally we can set back the fluid amount of each segment
+
+      local fluid_per_segment = segment_info.fluid_amount / table_size(reconstructed_segments_fluid_amount)
+      for _segment_id, access_entity in pairs(reconstructed_segments_fluid_amount) do
+        -- TODO can we track temperature and set it here
+        access_entity.fluidbox[1] = {
+          name = segment_info.fluid_name,
+          amount = fluid_per_segment,
+        }
+      end
     end
   end
   this_tick_deconstructed_segments = {}
