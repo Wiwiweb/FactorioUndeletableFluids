@@ -53,17 +53,18 @@ end
 script.on_event(defines.events.on_tick, on_tick)
 
 function on_new_storage_tank(entity)
+  local fluidbox = entity.fluidbox
   local tank_info = {
     entity = entity,
-    single_fluidbox = #entity.fluidbox == 1,
+    single_fluidbox = #fluidbox == 1,
     fluidboxes = {},
   }
-  for i = 1, #entity.fluidbox do
+  for i = 1, #fluidbox do
     table.insert(tank_info.fluidboxes, {
-      fluid_segment_id = entity.fluidbox.get_fluid_segment_id(i),
+      fluid_segment_id = fluidbox.get_fluid_segment_id(i),
       fluid_segment_info = {
-        content = entity.fluidbox.get_fluid_segment_contents(i),
-        capacity = entity.fluidbox.get_capacity(i),
+        fluid = fluidbox[i],
+        capacity = fluidbox.get_capacity(i),
       }
     })
   end

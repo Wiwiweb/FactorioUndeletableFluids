@@ -14,8 +14,8 @@ local function prevent_removal(event)
   }
 
   local saved_fluid_segments_fluids = {}
-  local fluidboxes = event.entity.fluidbox
-  for i = 1, #fluidboxes do
+  local fluid_count = event.entity.fluids_count
+  for i = 1, fluid_count do
     saved_fluid_segments_fluids[i] = event.entity.get_fluid(i)
   end
 
@@ -24,9 +24,8 @@ local function prevent_removal(event)
   local new_entity = surface.create_entity(new_entity_params)
 
   -- Restore fluids
-  local new_fluidboxes = new_entity.fluidbox
-  for i = 1, #new_fluidboxes do
-    new_fluidboxes[i] = saved_fluid_segments_fluids[i]
+  for i = 1, fluid_count do
+    new_entity.set_fluids(i, saved_fluid_segments_fluids[i])
   end
 
   -- Can't undo the +1 deconstruction on time graphs but let's at least undo them in the All graph
@@ -51,7 +50,7 @@ local function prevent_removal(event)
     end
   end
 
-  local fluid_name = new_fluidboxes[1].name -- Good enough
+  local fluid_name = new_entity.get_fluid(1).name -- Good enough
   if player then
     create_error_message(player, {"undeletable-fluids.mining_prevented"}, fluid_name, new_entity_params.position)
   elseif force then
@@ -64,7 +63,7 @@ local function would_fluid_be_deleted(entity)
   local entity_capacity = entity.prototype.fluid_capacity
   local fluidboxes = entity.fluidbox
   for i = 1, #fluidboxes do
-    local fluid_segment_contents = entity.get_fluid(i)
+    local fluid_segment_contents = fluidboxes[i]
     local fluid_segment_capacity = fluidboxes.get_capacity(i)
     if fluid_segment_capacity - entity_capacity < fluid_segment_contents.amount then
       return true

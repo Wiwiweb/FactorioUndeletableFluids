@@ -38,14 +38,14 @@ local function on_marked_for_deconstruction(event)
 
   local minimum_fluid_threshold = settings.global["undeletable_fluids_minimum_threshold"].value
 
-  for i = 1, #entity.fluidbox do
+  for i = 1, entity.fluid_count do
     local previous_tick_fluidbox_info = previous_tick_info.fluidboxes[i]
 
     local fluid_name, fluid_amount = next(previous_tick_fluidbox_info.fluid_segment_contents) -- There's only ever 0 or 1
 
-    if fluid_name ~= nil
-       and is_undeletable(fluid_name)
-       and fluid_amount > minimum_fluid_threshold
+    if fluid ~= nil
+       and is_undeletable(fluid.name)
+       and fluid.amount > minimum_fluid_threshold
     then
 
       local fluid_segment_id = previous_tick_fluidbox_info.fluid_segment_id
@@ -117,10 +117,10 @@ function handle_deconstructions()
       local fluid_per_segment = segment_info.fluid_amount / table_size(reconstructed_segments_fluid_amount)
       for _segment_id, access_entity in pairs(reconstructed_segments_fluid_amount) do
         -- TODO can we track temperature and set it here
-        access_entity.fluidbox[1] = {
+        access_entity.set_fluid(1, {
           name = segment_info.fluid_name,
           amount = fluid_per_segment,
-        }
+        })
       end
     end
   end
