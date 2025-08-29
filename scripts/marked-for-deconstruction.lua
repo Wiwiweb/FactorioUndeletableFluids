@@ -41,7 +41,7 @@ local function on_marked_for_deconstruction(event)
   for i = 1, entity.fluid_count do
     local previous_tick_fluidbox_info = previous_tick_info.fluidboxes[i]
 
-    local fluid_name, fluid_amount = next(previous_tick_fluidbox_info.fluid_segment_contents) -- There's only ever 0 or 1
+    local fluid = previous_tick_fluidbox_info.fluid_segment_fluid
 
     if fluid ~= nil
        and is_undeletable(fluid.name)
@@ -55,8 +55,8 @@ local function on_marked_for_deconstruction(event)
 
       this_tick_deconstructed_segments[fluid_segment_id] = this_tick_deconstructed_segments[fluid_segment_id] or {
         deconstructed_entities = {},
-        fluid_name = fluid_name,
-        fluid_amount = fluid_amount,
+        fluid_name = fluid.name,
+        fluid_amount = fluid.amount,
         capacity = previous_tick_fluidbox_info.fluid_segment_capacity,
         capacity_lost = 0,
       }

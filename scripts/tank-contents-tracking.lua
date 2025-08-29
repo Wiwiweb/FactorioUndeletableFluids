@@ -16,32 +16,33 @@ local function on_tick()
     if not entity.valid then
       storage.storage_tanks_by_unit_number[unit_number] = nil
     else
+      local fluidbox = entity.fluidbox
       if tank_info.single_fluidbox then -- This is the 99% common case so even just avoiding the loop is a 10-20% optimization, DRY be damned
-        local fluid_segment_id = entity.fluidbox.get_fluid_segment_id(1) --[[@as uint]]
+        local fluid_segment_id = fluidbox.get_fluid_segment_id(1) --[[@as uint]]
         if fluid_segment_infos_by_id[fluid_segment_id] == nil then
           fluid_segment_infos_by_id[fluid_segment_id] = {
-            contents = entity.fluidbox.get_fluid_segment_contents(1),
-            capacity = entity.fluidbox.get_capacity(1)
+            fluid = fluidbox[1],
+            capacity = fluidbox.get_capacity(1)
           }
         end
         tank_info.fluidboxes[1] = {
           fluid_segment_id = fluid_segment_id,
-          fluid_segment_contents = fluid_segment_infos_by_id[fluid_segment_id].contents,
+          fluid_segment_fluid = fluid_segment_infos_by_id[fluid_segment_id].fluid,
           fluid_segment_capacity = fluid_segment_infos_by_id[fluid_segment_id].capacity,
         }
       else -- Multiple fluidboxes in this storage tank, how weird
-        for i = 1, #entity.fluidbox do
-          local fluid_segment_id = entity.fluidbox.get_fluid_segment_id(i)
+        for i = 1, #fluidbox do
+          local fluid_segment_id = fluidbox.get_fluid_segment_id(i)
           if fluid_segment_id ~= nil then
             if fluid_segment_infos_by_id[fluid_segment_id] == nil then
               fluid_segment_infos_by_id[fluid_segment_id] = {
-                contents = entity.fluidbox.get_fluid_segment_contents(i),
-                capacity = entity.fluidbox.get_capacity(i)
+                fluid = fluidbox[1],
+                capacity = fluidbox.get_capacity(i)
               }
             end
             tank_info.fluidboxes[i] = {
               fluid_segment_id = fluid_segment_id,
-              fluid_segment_contents = fluid_segment_infos_by_id[fluid_segment_id].contents,
+              fluid_segment_fluid = fluid_segment_infos_by_id[fluid_segment_id].fluid,
               fluid_segment_capacity = fluid_segment_infos_by_id[fluid_segment_id].capacity,
             }
           end

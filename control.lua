@@ -46,7 +46,7 @@ end
 
 ---@class FluidboxInfo
 ---@field fluid_segment_id uint
----@field fluid_segment_contents { [string]: uint }
+---@field fluid_segment_fluid Fluid
 ---@field fluid_segment_capacity uint
 
 local function on_init()
