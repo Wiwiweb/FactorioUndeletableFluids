@@ -4,6 +4,7 @@ local function prevent_flushing(event)
   end
 
   -- I love fluids 2.0
+  -- TODO can we use the temperature tracked in storage.storage_tanks_by_unit_number here?
   event.entity.insert_fluid(
     {name = event.fluid, amount = event.amount}
   )

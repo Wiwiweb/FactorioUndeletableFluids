@@ -10,8 +10,7 @@
 
 ---@class DeconstructedSegmentInfo
 ---@field deconstructed_entities { [uint]: LuaEntity }
----@field fluid_name string
----@field fluid_amount float
+---@field fluid Fluid
 ---@field capacity uint
 ---@field capacity_lost uint
 
@@ -55,8 +54,7 @@ local function on_marked_for_deconstruction(event)
 
       this_tick_deconstructed_segments[fluid_segment_id] = this_tick_deconstructed_segments[fluid_segment_id] or {
         deconstructed_entities = {},
-        fluid_name = fluid.name,
-        fluid_amount = fluid.amount,
+        fluid = fluid,
         capacity = previous_tick_fluidbox_info.fluid_segment_capacity,
         capacity_lost = 0,
       }
@@ -78,7 +76,7 @@ function handle_deconstructions()
     -- local segment_free_space = (segment_info.capacity - segment_info.capacity_lost) - (segment_info.fluid_amount - segment_info.displaced_fluid_amount)
     -- local fluid_overflow = segment_info.displaced_fluid_amount - segment_free_space
     -- The above 2 lines can simplify to the line below:
-    local fluid_overflow = segment_info.fluid_amount - (segment_info.capacity - segment_info.capacity_lost)
+    local fluid_overflow = segment_info.fluid.amount - (segment_info.capacity - segment_info.capacity_lost)
     if fluid_overflow > 0 then
       -- log("fluid segment " .. segment_id .. " overflowed by " .. fluid_overflow)
 
@@ -114,12 +112,12 @@ function handle_deconstructions()
 
       -- 3) Finally we can set back the fluid amount of each segment
 
-      local fluid_per_segment = segment_info.fluid_amount / table_size(reconstructed_segments_fluid_amount)
+      local fluid_per_segment = segment_info.fluid.amount / table_size(reconstructed_segments_fluid_amount)
       for _segment_id, access_entity in pairs(reconstructed_segments_fluid_amount) do
-        -- TODO can we track temperature and set it here
         access_entity.set_fluid(1, {
-          name = segment_info.fluid_name,
+          name = segment_info.fluid.name,
           amount = fluid_per_segment,
+          temperature = segment_info.fluid.temperature,
         })
       end
     end

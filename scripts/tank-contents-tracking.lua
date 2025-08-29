@@ -22,7 +22,7 @@ local function on_tick()
         if fluid_segment_infos_by_id[fluid_segment_id] == nil then
           fluid_segment_infos_by_id[fluid_segment_id] = {
             fluid = fluidbox[1],
-            capacity = fluidbox.get_capacity(1)
+            capacity = fluidbox.get_capacity(1) -- This returns the whole segment's capacity
           }
         end
         tank_info.fluidboxes[1] = {
