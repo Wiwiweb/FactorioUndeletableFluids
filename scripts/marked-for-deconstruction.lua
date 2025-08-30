@@ -37,7 +37,7 @@ local function on_marked_for_deconstruction(event)
 
   local minimum_fluid_threshold = settings.global["undeletable_fluids_minimum_threshold"].value
 
-  for i = 1, entity.fluid_count do
+  for i = 1, entity.fluids_count do
     local previous_tick_fluidbox_info = previous_tick_info.fluidboxes[i]
 
     local fluid = previous_tick_fluidbox_info.fluid_segment_fluid

@@ -8,7 +8,7 @@ local function prevent_destruction(event)
   -- Save fluids before we destroy the entity.
   -- We can't just use get_fluid_contents() because we need temperature.
   local fluids = {}
-  for i = 1, entity.fluid_count do
+  for i = 1, entity.fluids_count do
     table.insert(fluids, entity.get_fluid(i))
   end
 

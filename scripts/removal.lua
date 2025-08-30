@@ -14,8 +14,8 @@ local function prevent_removal(event)
   }
 
   local saved_fluid_segments_fluids = {}
-  local fluid_count = event.entity.fluids_count
-  for i = 1, fluid_count do
+  local fluids_count = event.entity.fluids_count
+  for i = 1, fluids_count do
     saved_fluid_segments_fluids[i] = event.entity.get_fluid(i)
   end
 
@@ -24,7 +24,7 @@ local function prevent_removal(event)
   local new_entity = surface.create_entity(new_entity_params)
 
   -- Restore fluids
-  for i = 1, fluid_count do
+  for i = 1, fluids_count do
     new_entity.set_fluids(i, saved_fluid_segments_fluids[i])
   end
 
