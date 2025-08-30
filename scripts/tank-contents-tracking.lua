@@ -21,7 +21,7 @@ local function on_tick()
         local fluid_segment_id = fluidbox.get_fluid_segment_id(1) --[[@as uint]]
         if fluid_segment_infos_by_id[fluid_segment_id] == nil then
           fluid_segment_infos_by_id[fluid_segment_id] = {
-            fluid = fluidbox[1],
+            fluid = entity.get_fluid(1),
             capacity = fluidbox.get_capacity(1) -- This returns the whole segment's capacity
           }
         end
@@ -36,7 +36,7 @@ local function on_tick()
           if fluid_segment_id ~= nil then
             if fluid_segment_infos_by_id[fluid_segment_id] == nil then
               fluid_segment_infos_by_id[fluid_segment_id] = {
-                fluid = fluidbox[1],
+                fluid = entity.get_fluid(1),
                 capacity = fluidbox.get_capacity(i)
               }
             end

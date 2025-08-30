@@ -49,6 +49,17 @@ end
 ---@field fluid_segment_fluid Fluid
 ---@field fluid_segment_capacity uint
 
+-- Fluid API notes:
+-- Returns info about or affects the entire segment:
+-- * LuaEntity#get_fluid()
+-- * LuaFluidbox#get_fluid_segment_contents()
+-- * LuaFluidbox#get_capacity()
+-- * LuaEntity#set_fluid()
+-- * LuaFluidbox[] = (set)
+-- Only returns info about the entity's or fluidbox's contents:
+-- * LuaEntity#get_fluid_contents()
+-- * LuaFluidbox#[] (get)
+
 local function on_init()
   -- set of fluid names
   storage.undeletable_fluids = {}
