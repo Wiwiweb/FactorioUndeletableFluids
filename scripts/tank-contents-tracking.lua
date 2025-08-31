@@ -36,7 +36,7 @@ local function on_tick()
           if fluid_segment_id ~= nil then
             if fluid_segment_infos_by_id[fluid_segment_id] == nil then
               fluid_segment_infos_by_id[fluid_segment_id] = {
-                fluid = entity.get_fluid(1),
+                fluid = entity.get_fluid(i),
                 capacity = fluidbox.get_capacity(i)
               }
             end
@@ -64,7 +64,7 @@ function on_new_storage_tank(entity)
     table.insert(tank_info.fluidboxes, {
       fluid_segment_id = fluidbox.get_fluid_segment_id(i),
       fluid_segment_info = {
-        fluid = fluidbox[i],
+        fluid = entity.get_fluid(i),
         capacity = fluidbox.get_capacity(i),
       }
     })
